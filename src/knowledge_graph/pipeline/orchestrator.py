@@ -190,6 +190,85 @@ class RadarPipelineOrchestrator:
         except Exception as e:
             logger.error(f"Failed to get pipeline status: {e}")
             return {"error": str(e)}
+    
+    async def create_sample_radar_data(self) -> List[RadarTechnique]:
+        """Create sample radar techniques based on current Technology Radar themes.
+        
+        Returns:
+            List of RadarTechnique objects with sample data
+        """
+        from ..models.radar import RadarQuadrant, RadarRing, RadarMovement
+        
+        sample_techniques = [
+            RadarTechnique(
+                name="Supervised Agents in Coding Assistants",
+                quadrant=RadarQuadrant.TECHNIQUES,
+                ring=RadarRing.TRIAL,
+                movement=RadarMovement.NEW,
+                description="AI assistants that go beyond answering questions or generating small snippets; they navigate and modify code, update tests, execute commands and, in some cases, proactively fix linting and compilation errors. While we remain skeptical of coding agents that promise fully autonomous development of large tasks, we've seen promising results with this supervised approach, where developers still guide and oversee the agent's actions. Tools like Cursor, Cline and Windsurf are leading this trend.",
+                volume=32,
+                edition_date="2025-04",
+                source_url="https://www.thoughtworks.com/radar",
+                related_blips=["GitHub Copilot", "Cursor", "Cline"],
+                methodology_connections=["DevOps", "Agile"],
+                practice_connections=["Pair Programming", "Code Review"]
+            ),
+            RadarTechnique(
+                name="LLM Observability",
+                quadrant=RadarQuadrant.TECHNIQUES,
+                ring=RadarRing.ASSESS,
+                movement=RadarMovement.NEW,
+                description="A critical piece in operationalizing AI. We've seen a surge in tools for monitoring and evaluating LLM performance, including Weights & Biases Weave, Arize Phoenix, Helicone and HumanLoop. The rapid innovation in observability tools demonstrates growing industry awareness of observability's importance.",
+                volume=32,
+                edition_date="2025-04",
+                source_url="https://www.thoughtworks.com/radar",
+                related_blips=["Weights & Biases Weave", "Arize Phoenix", "OpenTelemetry"],
+                methodology_connections=["DevOps", "MLOps"],
+                practice_connections=["Monitoring", "Performance Testing"]
+            ),
+            RadarTechnique(
+                name="Corrective RAG",
+                quadrant=RadarQuadrant.TECHNIQUES,
+                ring=RadarRing.ASSESS,
+                movement=RadarMovement.NEW,
+                description="An advanced RAG technique that dynamically adjusts responses based on feedback or heuristics. Part of the evolving R in RAG (retrieval-augmented generation), this approach improves the quality and relevance of AI-generated responses by incorporating corrective mechanisms.",
+                volume=32,
+                edition_date="2025-04",
+                source_url="https://www.thoughtworks.com/radar",
+                related_blips=["Fusion-RAG", "Self-RAG", "FastGraphRAG"],
+                methodology_connections=["AI/ML Development"],
+                practice_connections=["Data Engineering", "Model Evaluation"]
+            ),
+            RadarTechnique(
+                name="Data Product Thinking",
+                quadrant=RadarQuadrant.TECHNIQUES,
+                ring=RadarRing.TRIAL,
+                movement=RadarMovement.NEW,
+                description="A framework that encourages teams to apply the principles of product thinking to the analytic parts of their ecosystem. With the increasing presence and importance of unstructured data in the enterprise, ensuring data is effectively managed and packaged so it can be successfully leveraged for everything from AI applications to customer analytics is vital for businesses.",
+                volume=32,
+                edition_date="2025-04",
+                source_url="https://www.thoughtworks.com/radar",
+                related_blips=["Vector Databases", "Metabase"],
+                methodology_connections=["Data Engineering", "Product Management"],
+                practice_connections=["Data Governance", "Analytics"]
+            ),
+            RadarTechnique(
+                name="Threat Modeling",
+                quadrant=RadarQuadrant.TECHNIQUES,
+                ring=RadarRing.ADOPT,
+                movement=RadarMovement.NO_CHANGE,
+                description="A structured approach to identifying and addressing potential security threats in software systems. This established practice helps teams proactively identify vulnerabilities and design appropriate security controls. Essential for building secure systems and should be integrated into the development lifecycle.",
+                volume=32,
+                edition_date="2025-04",
+                source_url="https://www.thoughtworks.com/radar",
+                related_blips=["Security by Design", "STRIDE"],
+                methodology_connections=["Security Engineering", "DevSecOps"],
+                practice_connections=["Security Assessment", "Architecture Review"]
+            )
+        ]
+        
+        logger.info(f"Created {len(sample_techniques)} sample radar techniques")
+        return sample_techniques
 
 
 # Convenience functions for direct usage
@@ -200,14 +279,57 @@ async def scrape_fuzz_testing():
 
 
 async def run_demo_pipeline():
-    """Run a demo pipeline with a few techniques."""
+    """Run a demo pipeline with sample radar data."""
     orchestrator = RadarPipelineOrchestrator()
     
-    # Demo with specific high-value techniques
-    demo_techniques = [
-        "/techniques/summary/fuzz-testing",
-        "/techniques/summary/threat-modeling", 
-        "/techniques/summary/api-request-collection-as-api-product-artifact"
-    ]
+    # Create sample techniques manually since scraping URLs are not working
+    sample_techniques = await orchestrator.create_sample_radar_data()
     
-    return await orchestrator.run_full_pipeline(demo_techniques)
+    # Process the sample techniques
+    results = {
+        "start_time": datetime.now(),
+        "techniques_processed": 0,
+        "total_entities_created": 0,
+        "errors": [],
+        "success": True
+    }
+    
+    for technique in sample_techniques:
+        try:
+            # Process technique data
+            processed_data = orchestrator.processor.process_radar_technique(technique)
+            
+            # Ingest into Neo4j
+            ingest_results = orchestrator.ingestor.ingest_processed_data(processed_data)
+            
+            # Also create dedicated RadarTechnique node
+            radar_result = orchestrator.ingestor.ingest_radar_technique_direct(technique)
+            
+            # Update results
+            results["techniques_processed"] += 1
+            results["total_entities_created"] += sum([
+                ingest_results["methodologies_created"],
+                ingest_results["practices_created"], 
+                ingest_results["rules_created"],
+                ingest_results["evidence_created"]
+            ])
+            
+            if ingest_results["errors"]:
+                results["errors"].extend(ingest_results["errors"])
+                
+            logger.info(f"✅ Completed technique: {technique.name}")
+            
+        except Exception as e:
+            error_msg = f"Error processing technique {technique.name}: {e}"
+            logger.error(error_msg)
+            results["errors"].append(error_msg)
+    
+    end_time = datetime.now()
+    duration = end_time - results["start_time"]
+    
+    results.update({
+        "end_time": end_time,
+        "duration_seconds": duration.total_seconds()
+    })
+    
+    return results

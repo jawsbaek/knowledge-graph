@@ -241,9 +241,10 @@ class Neo4jRadarIngestor:
             CYPHER 25
             MATCH (rt:RadarTechnique)
             OPTIONAL MATCH (rt)-[:INFLUENCES_PRACTICE]->(p:Practice)
+            WITH rt, collect(p.name) as related_practices
             RETURN rt {
                 .*,
-                related_practices: collect(p.name)
+                related_practices: related_practices
             } as technique
             ORDER BY rt.ring, rt.name
             """

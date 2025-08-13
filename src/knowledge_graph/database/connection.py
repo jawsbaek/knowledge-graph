@@ -85,9 +85,12 @@ class Neo4jConnection:
         Returns:
             List of result records as dictionaries
         """
-        with self.get_session() as session:
-            result = session.execute_write(lambda tx: tx.run(query, parameters or {}))
+        def _execute_in_transaction(tx):
+            result = tx.run(query, parameters or {})
             return [dict(record) for record in result]
+        
+        with self.get_session() as session:
+            return session.execute_write(_execute_in_transaction)
     
     def execute_read_query(self, query: str, parameters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         """Execute a read Cypher query and return results.
@@ -99,9 +102,12 @@ class Neo4jConnection:
         Returns:
             List of result records as dictionaries
         """
-        with self.get_session() as session:
-            result = session.execute_read(lambda tx: tx.run(query, parameters or {}))
+        def _execute_in_transaction(tx):
+            result = tx.run(query, parameters or {})
             return [dict(record) for record in result]
+        
+        with self.get_session() as session:
+            return session.execute_read(_execute_in_transaction)
 
 
 # Global connection instance

@@ -1,9 +1,9 @@
 """Configuration management using Pydantic Settings."""
 
 from functools import lru_cache
-from typing import Optional
+from typing import List, Optional, Union
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -11,8 +11,6 @@ class Settings(BaseSettings):
     """Application settings."""
     
     model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore"
     )
@@ -40,9 +38,19 @@ class Settings(BaseSettings):
     log_format: str = "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
     
     # CORS
-    cors_origins: list[str] = ["http://localhost:3000", "http://localhost:8501"]
-    cors_methods: list[str] = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-    cors_headers: list[str] = ["*"]
+    cors_origins: List[str] = Field(default_factory=lambda: ["http://localhost:3000", "http://localhost:8501"])
+    cors_methods: List[str] = Field(default_factory=lambda: ["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+    cors_headers: List[str] = Field(default_factory=lambda: ["*"])
+    
+    @field_validator('cors_origins', 'cors_methods', 'cors_headers', mode='before')
+    @classmethod
+    def parse_comma_separated_list(cls, v: Union[str, List[str]]) -> List[str]:
+        """Parse comma-separated string into list."""
+        if isinstance(v, str):
+            if v.strip() == "":
+                return []
+            return [item.strip() for item in v.split(',') if item.strip()]
+        return v or []
 
 
 @lru_cache
