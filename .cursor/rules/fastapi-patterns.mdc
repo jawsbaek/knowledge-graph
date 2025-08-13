@@ -1,0 +1,54 @@
+---
+globs: "src/knowledge_graph/api/**/*.py"
+description: "FastAPI development patterns and best practices"
+---
+
+# FastAPI Development Patterns
+
+## API Structure Reference
+Main application: [src/knowledge_graph/api/main.py](mdc:src/knowledge_graph/api/main.py)
+
+## Router Pattern
+Each entity has its own router in [src/knowledge_graph/api/routers/](mdc:src/knowledge_graph/api/routers/):
+- [methodologies.py](mdc:src/knowledge_graph/api/routers/methodologies.py)
+- [practices.py](mdc:src/knowledge_graph/api/routers/practices.py)
+- [rules.py](mdc:src/knowledge_graph/api/routers/rules.py)
+- [contexts.py](mdc:src/knowledge_graph/api/routers/contexts.py)
+- [evidence.py](mdc:src/knowledge_graph/api/routers/evidence.py)
+
+## Dependency Injection Pattern
+```python
+def get_methodology_repository() -> MethodologyRepository:
+    connection = get_neo4j_connection()
+    return MethodologyRepository(connection)
+
+@router.get("/methodologies")
+async def get_methodologies(
+    repo: MethodologyRepository = Depends(get_methodology_repository)
+) -> List[Methodology]:
+    return repo.get_all()
+```
+
+## Error Handling Pattern
+```python
+try:
+    result = repo.create(methodology)
+    logger.info(f"Created methodology: {result.name}")
+    return result
+except HTTPException:
+    raise
+except Exception as e:
+    logger.error(f"Failed to create methodology: {e}")
+    raise HTTPException(status_code=500, detail="Failed to create methodology")
+```
+
+## Pydantic Model Usage
+- Request models: [src/knowledge_graph/models/nodes.py](mdc:src/knowledge_graph/models/nodes.py)
+- Response models: Same Pydantic models for consistency
+- Use `model_dump(exclude_none=True)` for database operations
+
+## Advanced Endpoints with Cypher 25
+Support complex queries with specialized endpoints:
+- `/methodologies/{name}/related` - Find related methodologies
+- `/methodologies/{name}/full` - Complete hierarchy with COLLECT subqueries
+- `/rules/find-applicable` - Context-based rule discovery with EXISTS

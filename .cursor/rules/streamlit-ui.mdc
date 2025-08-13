@@ -1,0 +1,72 @@
+---
+globs: "src/knowledge_graph/ui/**/*.py"
+description: "Streamlit UI development guidelines and patterns"
+---
+
+# Streamlit UI Development Guidelines
+
+## Main Application
+UI entry point: [src/knowledge_graph/ui/app.py](mdc:src/knowledge_graph/ui/app.py)
+
+## UI Architecture Pattern
+```python
+@st.cache_resource
+def get_api_client() -> APIClient:
+    """Cached API client for efficient HTTP communication"""
+    return APIClient("http://localhost:8000")
+
+def main() -> None:
+    st.title("🧠 Knowledge Graph - Programming Methodology Management")
+    # Navigation sidebar with page selection
+    # Main content area based on selected page
+```
+
+## Page Structure
+Current pages implemented:
+1. **Dashboard** - Overview metrics and recent items
+2. **Methodologies** - CRUD operations for methodologies
+3. **Practices** - Practice management by methodology
+4. **Rules** - Rule creation and context mapping
+5. **Contexts** - Environment and constraint definitions
+6. **Graph Visualization** - Future feature for network display
+
+## Form Patterns
+```python
+with st.expander("➕ Create New Methodology"):
+    with st.form("create_methodology"):
+        name = st.text_input("Name*", placeholder="e.g., Agile")
+        description = st.text_area("Description")
+        # ... other fields
+        
+        if st.form_submit_button("Create Methodology"):
+            if name:
+                result = api.create_methodology(data)
+                if result:
+                    st.success(f"Methodology '{name}' created!")
+                    st.rerun()
+```
+
+## API Integration Pattern
+```python
+class APIClient:
+    def __init__(self, base_url: str = "http://localhost:8000"):
+        self.base_url = base_url.rstrip("/")
+        self.client = httpx.Client(timeout=30.0)
+    
+    def get_methodologies(self) -> List[Dict[str, Any]]:
+        response = self.client.get(f"{self.base_url}/api/v1/methodologies")
+        response.raise_for_status()
+        return response.json()
+```
+
+## UI Components
+- Use expandable sections for detailed views
+- Implement metrics with `st.metric()` for dashboard
+- Color-coded priority indicators for rules
+- Responsive column layouts for data display
+
+## Future Enhancements
+- Graph visualization with Pyvis or NetworkX
+- Real-time updates via WebSocket
+- Advanced search and filtering
+- Export functionality for knowledge artifacts

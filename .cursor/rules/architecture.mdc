@@ -1,0 +1,46 @@
+---
+alwaysApply: true
+description: "Knowledge Graph project architecture and design principles"
+---
+
+# Knowledge Graph Architecture & Design Principles
+
+## Project Overview
+This project implements a graph-based knowledge management system for programming development methodologies using Neo4j, FastAPI, and Streamlit.
+
+## Core Architecture
+```
+[Streamlit UI] <-> [FastAPI API] <-> [Neo4j Database with Cypher 25]
+```
+
+### Technology Stack
+- **Backend**: FastAPI with uvicorn
+- **Database**: Neo4j 2025.07.01 with Cypher 25 syntax
+- **Frontend**: Streamlit for rapid prototyping
+- **Package Manager**: uv for dependency management
+- **Development**: Docker Compose for full stack deployment
+
+### Project Structure Reference
+- Main API entry: [src/knowledge_graph/api/main.py](mdc:src/knowledge_graph/api/main.py)
+- Database models: [src/knowledge_graph/models/nodes.py](mdc:src/knowledge_graph/models/nodes.py)
+- Neo4j repositories: [src/knowledge_graph/database/repository.py](mdc:src/knowledge_graph/database/repository.py)
+- Streamlit UI: [src/knowledge_graph/ui/app.py](mdc:src/knowledge_graph/ui/app.py)
+- Configuration: [src/knowledge_graph/utils/config.py](mdc:src/knowledge_graph/utils/config.py)
+
+## Core Entities & Relationships
+- **Methodology** (Agile, Scrum, DevOps) -[:HAS_PRACTICE]-> **Practice**
+- **Practice** (Daily Scrum, CI/CD) -[:HAS_RULE]-> **Rule**
+- **Rule** -[:APPLIES_IN]-> **Context** (Remote Team, Startup)
+- **Rule** -[:SUPPORTED_BY]-> **Evidence** (Research, Documentation)
+
+## Clean Architecture Principles
+1. **API Layer**: FastAPI routers in [src/knowledge_graph/api/routers/](mdc:src/knowledge_graph/api/routers/)
+2. **Business Logic**: Repository pattern in [src/knowledge_graph/database/](mdc:src/knowledge_graph/database/)
+3. **Data Models**: Pydantic models in [src/knowledge_graph/models/](mdc:src/knowledge_graph/models/)
+4. **UI Layer**: Streamlit components in [src/knowledge_graph/ui/](mdc:src/knowledge_graph/ui/)
+
+## Development Environment
+- Environment config: [.env](mdc:.env)
+- Docker setup: [docker/docker-compose.yml](mdc:docker/docker-compose.yml)
+- Development scripts: [scripts/run_dev.py](mdc:scripts/run_dev.py)
+- Sample data: [data/sample_data.cypher](mdc:data/sample_data.cypher)

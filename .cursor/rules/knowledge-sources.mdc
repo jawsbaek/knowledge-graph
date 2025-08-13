@@ -1,0 +1,80 @@
+---
+alwaysApply: false
+description: "Knowledge sources and reference materials for methodology development"
+---
+
+# Knowledge Sources & Reference Materials
+
+## Official Methodology Sources
+
+### Project Management
+- **PMI (Project Management Institute)**: https://www.pmi.org
+  - PMBOK Guide and methodology frameworks
+  - Standard practices for project management
+  - Certification programs and best practices
+
+### Agile & Scrum
+- **Agile Alliance**: https://www.agilealliance.org
+  - Agile principles and practices
+  - Community-driven insights and case studies
+  - Training resources and events
+
+- **Scrum Guides**: https://scrumguides.org
+  - Official Scrum methodology documentation
+  - Authored by Ken Schwaber and Jeff Sutherland
+  - Definitive source for Scrum framework rules
+
+### Systems Engineering
+- **SEBoK (Systems Engineering Body of Knowledge)**: https://www.sebokwiki.org
+  - Comprehensive systems engineering knowledge
+  - Structured in graph-like format (perfect for our use case)
+  - Academic and industry best practices
+
+### Technology Trends
+- **ThoughtWorks Technology Radar**: https://www.thoughtworks.com/radar
+  - Current technology and methodology trends
+  - Industry adoption patterns
+  - Risk assessment for new approaches
+
+## Implementation in Knowledge Graph
+
+### Evidence Integration
+Link these sources as Evidence nodes in the graph:
+
+```cypher
+CYPHER 25
+CREATE (pmbok:Evidence {
+  name: "pmbok-guide",
+  title: "PMBOK Guide",
+  url: "https://www.pmi.org",
+  source_type: "standard",
+  credibility_score: 9.8
+})
+
+CREATE (agile_manifesto:Evidence {
+  name: "agile-manifesto", 
+  title: "Agile Manifesto",
+  url: "https://www.agilealliance.org",
+  source_type: "manifesto",
+  credibility_score: 10.0
+})
+```
+
+### Sample Data Reference
+See [data/sample_data.cypher](mdc:data/sample_data.cypher) for current evidence implementations.
+
+### API Integration
+Use [src/knowledge_graph/api/routers/evidence.py](mdc:src/knowledge_graph/api/routers/evidence.py) to manage these knowledge sources.
+
+## Content Mining Strategy
+1. **Automated Extraction**: Parse methodology documentation
+2. **Expert Knowledge**: Interview practitioners and consultants  
+3. **Case Studies**: Real-world implementation examples
+4. **Academic Research**: Peer-reviewed methodology studies
+5. **Community Contributions**: Open source methodology evolution
+
+## Quality Assurance
+- Credibility scoring (0.0-10.0) for each source
+- Source type categorization (standard, guide, manifesto, research)
+- Regular updates to reflect methodology evolution
+- Citation tracking for rule validation

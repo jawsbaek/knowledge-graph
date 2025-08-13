@@ -1,0 +1,99 @@
+---
+alwaysApply: false
+description: "Advanced Cypher 25 query examples and patterns"
+---
+
+# Advanced Cypher 25 Query Examples
+
+## Comprehensive Examples Reference
+See [data/cypher25_examples.cypher](mdc:data/cypher25_examples.cypher) for 130+ query examples across 13 categories.
+
+## Core Query Patterns
+
+### Modern Aggregation with COLLECT
+```cypher
+CYPHER 25
+MATCH (m:Methodology {name: "Scrum"})
+RETURN m {
+    .*,
+    practices: [
+        COLLECT {
+            MATCH (m)-[:HAS_PRACTICE]->(p:Practice)
+            RETURN p {
+                .*,
+                rules: [COLLECT { MATCH (p)-[:HAS_RULE]->(r:Rule) RETURN r }]
+            }
+        }
+    ]
+}
+```
+
+### Smart Filtering with EXISTS
+```cypher
+CYPHER 25
+MATCH (r:Rule)
+WHERE EXISTS {
+    MATCH (r)-[:APPLIES_IN]->(c:Context)
+    WHERE ANY(constraint IN c.constraints WHERE constraint CONTAINS "remote")
+}
+RETURN r.title, r.priority
+```
+
+### Metrics with COUNT Subqueries
+```cypher
+CYPHER 25
+MATCH (m:Methodology)
+RETURN m.name,
+       COUNT { (m)-[:HAS_PRACTICE]->() } as practice_count,
+       COUNT { (m)-[:HAS_PRACTICE]->()-[:HAS_RULE]->() } as total_rules
+ORDER BY total_rules DESC
+```
+
+## Repository Implementation Examples
+Reference [src/knowledge_graph/database/repository.py](mdc:src/knowledge_graph/database/repository.py) for:
+
+### Related Entity Discovery
+```python
+def find_related_methodologies(self, methodology_name: str, limit: int = 5):
+    query = """
+    CYPHER 25
+    MATCH (source:Methodology {name: $methodology_name})
+    CALL {
+        WITH source
+        MATCH (source)-[:RELATED_TO|HAS_PRACTICE*..]-(related:Methodology)
+        WHERE related <> source
+        RETURN related, count(*) as connections
+        ORDER BY connections DESC
+        LIMIT $limit
+    }
+    RETURN related
+    """
+```
+
+### Context-Based Rule Discovery
+```python
+def find_applicable_rules(self, context_constraints: List[str]):
+    query = """
+    CYPHER 25
+    MATCH (r:Rule)
+    WHERE EXISTS {
+        MATCH (r)-[:APPLIES_IN]->(c:Context)
+        WHERE ANY(constraint IN c.constraints WHERE constraint IN $constraints)
+    }
+    RETURN r ORDER BY r.priority DESC
+    """
+```
+
+## Performance Optimization
+- Use indexed properties in WHERE clauses
+- Leverage Cypher 25 parallel runtime features
+- Profile complex queries with EXPLAIN/PROFILE
+- Consider query hints for specific use cases
+
+## Sample Data Integration
+Initial data setup: [data/sample_data.cypher](mdc:data/sample_data.cypher)
+- 5 methodologies (Agile, Scrum, DevOps, Kanban, Waterfall)
+- 9 practices with tools and difficulty levels
+- 7 rules with priorities and categories
+- 4 contexts (Remote, Startup, Enterprise, Open Source)
+- 4 evidence sources with credibility scores

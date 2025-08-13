@@ -1,0 +1,57 @@
+---
+alwaysApply: false
+description: "Data pipeline for ingesting external methodology sources like ThoughtWorks Technology Radar"
+---
+
+# Data Pipeline for External Sources
+
+## ThoughtWorks Technology Radar Integration
+
+### Source Reference
+- **ThoughtWorks Technology Radar**: https://www.thoughtworks.com/radar
+- **Example Technique**: [Fuzz Testing](https://www.thoughtworks.com/radar/techniques/summary/fuzz-testing)
+- **API Endpoints**: Technology Radar provides structured data for automation
+
+### Data Pipeline Architecture
+```
+[Web Scraper/API] -> [Data Processor] -> [Neo4j Ingestion] -> [Knowledge Graph]
+```
+
+### Pipeline Components
+- Web scraping: [src/knowledge_graph/pipeline/scrapers/](mdc:src/knowledge_graph/pipeline/scrapers/)
+- Data processing: [src/knowledge_graph/pipeline/processors/](mdc:src/knowledge_graph/pipeline/processors/)
+- Neo4j ingestion: [src/knowledge_graph/pipeline/ingestors/](mdc:src/knowledge_graph/pipeline/ingestors/)
+
+### Technology Radar Data Model
+- **Technique/Tool/Platform**: Core technology items
+- **Quadrant**: Techniques, Tools, Platforms, Languages & Frameworks  
+- **Ring**: Adopt, Trial, Assess, Hold
+- **Movement**: New, Moved in/out, No change
+- **Edition**: Volume and date information
+
+### Cypher 25 Schema Extensions
+```cypher
+CYPHER 25
+// Technology Radar specific nodes
+CREATE (technique:Technique:RadarItem {
+  name: "Fuzz testing",
+  ring: "Adopt", 
+  quadrant: "Techniques",
+  movement: "No change",
+  volume: 32,
+  edition_date: "2025-04",
+  description: "Testing technique that feeds software systems invalid input...",
+  source_url: "https://www.thoughtworks.com/radar/techniques/summary/fuzz-testing"
+})
+
+// Link to existing methodology
+CREATE (technique)-[:SUPPORTS_PRACTICE]->(practice:Practice {name: "Automated Testing"})
+CREATE (technique)-[:VALIDATES_RULE]->(rule:Rule {category: "testing"})
+```
+
+### Pipeline Implementation
+Reference [src/knowledge_graph/pipeline/](mdc:src/knowledge_graph/pipeline/) for:
+- Scheduled data collection (weekly/monthly)
+- Data validation and transformation
+- Incremental updates and change detection
+- Integration with existing knowledge graph structure

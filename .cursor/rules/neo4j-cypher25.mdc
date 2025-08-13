@@ -1,0 +1,70 @@
+---
+alwaysApply: true
+description: "Neo4j Cypher 25 syntax guidelines and best practices"
+---
+
+# Neo4j Cypher 25 Guidelines
+
+## Official Reference
+Follow [Neo4j Cypher Manual 25](https://neo4j.com/docs/cypher-manual/25/introduction/) for all database operations.
+
+## Cypher 25 Syntax Requirements
+Always use `CYPHER 25` directive at the beginning of queries:
+
+```cypher
+CYPHER 25
+MATCH (m:Methodology)-[:HAS_PRACTICE]->(p:Practice)
+RETURN m, p
+```
+
+## Modern Cypher 25 Features to Use
+
+### COLLECT Subqueries
+```cypher
+CYPHER 25
+MATCH (m:Methodology)
+RETURN m, [
+  COLLECT { 
+    MATCH (m)-[:HAS_PRACTICE]->(p:Practice)
+    RETURN p {
+      .*,
+      rules: [COLLECT { MATCH (p)-[:HAS_RULE]->(r:Rule) RETURN r }]
+    }
+  }
+] as practices
+```
+
+### EXISTS Subqueries for Filtering
+```cypher
+CYPHER 25
+MATCH (r:Rule)
+WHERE EXISTS {
+  MATCH (r)-[:APPLIES_IN]->(c:Context)
+  WHERE c.team_size = "Remote"
+}
+RETURN r
+```
+
+### COUNT Subqueries for Metrics
+```cypher
+CYPHER 25
+MATCH (m:Methodology)
+RETURN m.name,
+       COUNT { (m)-[:HAS_PRACTICE]->() } as practice_count
+```
+
+## Database Schema Conventions
+- **Nodes**: PascalCase (Methodology, Practice, Rule, Context, Evidence)
+- **Relationships**: UPPER_SNAKE_CASE (HAS_PRACTICE, APPLIES_IN, SUPPORTED_BY)
+- **Properties**: snake_case (team_size, year_created, credibility_score)
+
+## Index and Constraint Patterns
+Reference [data/sample_data.cypher](mdc:data/sample_data.cypher) for proper index creation:
+
+```cypher
+CREATE INDEX methodology_name_idx FOR (n:Methodology) ON (n.name);
+CREATE CONSTRAINT methodology_name_unique FOR (m:Methodology) REQUIRE m.name IS UNIQUE;
+```
+
+## Repository Implementation
+See [src/knowledge_graph/database/repository.py](mdc:src/knowledge_graph/database/repository.py) for Cypher 25 implementation examples.

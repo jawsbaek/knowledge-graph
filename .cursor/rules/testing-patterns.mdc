@@ -1,0 +1,75 @@
+---
+globs: "tests/**/*.py"
+description: "Testing patterns and quality assurance guidelines"
+---
+
+# Testing Patterns & Quality Assurance
+
+## Test Structure
+- Unit tests: [tests/unit/](mdc:tests/unit/)
+- Integration tests: [tests/integration/](mdc:tests/integration/)
+- Test configuration: [pyproject.toml](mdc:pyproject.toml) pytest section
+
+## Test Examples
+Current test implementation: [tests/unit/test_models.py](mdc:tests/unit/test_models.py)
+
+## Testing Patterns
+
+### Pydantic Model Testing
+```python
+def test_valid_methodology(self) -> None:
+    methodology = MethodologyCreate(
+        name="Agile",
+        description="Agile methodology",
+        year_created=2001
+    )
+    assert methodology.name == "Agile"
+
+def test_methodology_name_required(self) -> None:
+    with pytest.raises(ValidationError):
+        MethodologyCreate()
+```
+
+### Repository Testing Pattern
+```python
+@pytest.fixture
+def mock_connection():
+    """Mock Neo4j connection for testing"""
+    return Mock(spec=Neo4jConnection)
+
+def test_create_methodology(mock_connection):
+    repo = MethodologyRepository(mock_connection)
+    mock_connection.execute_write_query.return_value = [{"m": {...}}]
+    
+    result = repo.create(methodology_data)
+    assert result.name == "Test Methodology"
+```
+
+### API Testing Pattern
+```python
+@pytest.mark.asyncio
+async def test_create_methodology_endpoint():
+    async with AsyncClient(app=app, base_url="http://test") as client:
+        response = await client.post("/api/v1/methodologies", json={...})
+        assert response.status_code == 201
+```
+
+## Coverage Requirements
+- Minimum 80% code coverage
+- All public API endpoints tested
+- All Pydantic models validated
+- Error conditions properly tested
+
+## Neo4j Testing Strategy
+- Mock database connections in unit tests
+- Use test database for integration tests
+- Cypher 25 query syntax validation
+- Performance testing for complex queries
+
+## Quality Tools Configuration
+See [pyproject.toml](mdc:pyproject.toml) for:
+- pytest configuration
+- coverage settings
+- mypy type checking
+- black code formatting
+- isort import organization
